@@ -30,6 +30,13 @@ generate_name() {
     echo "${c}-${a}-${n}"
 }
 
+check_correctness() {
+    python3 correctness-check.py $1 verf/$2
+    if [ $? -ne 0 ]; then
+        exit 1
+    fi
+}
+
 if [ -f "$NAMEFILE" ]; then
     LEADERBOARD_NAME=$(cat "$NAMEFILE")
 else
@@ -39,10 +46,80 @@ fi
 
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S")
 
+module load python
+export OMP_NUM_THREADS=1
+
 # --- Output begins ---
 echo "===== CS5220 HW3 LEADERBOARD SUBMISSION ====="
 echo "LEADERBOARD_NAME: $LEADERBOARD_NAME"
 echo "TIMESTAMP: $TIMESTAMP"
+echo ""
+
+# Serial Correctness
+echo "--- SERIAL-CORRECTNESS ---"
+srun $SLURM_FLAGS -N 1 -n 1 ./build/mpi -s 37151292 -n 10000 -o stest1.out
+srun $SLURM_FLAGS -N 1 -n 1 ./build/mpi -s 11111111 -n 10000 -o stest2.out
+srun $SLURM_FLAGS -N 1 -n 1 ./build/mpi -s 21211411 -n 10000 -o stest3.out
+srun $SLURM_FLAGS -N 1 -n 1 ./build/mpi -s 12222222 -n 10000 -o stest4.out
+srun $SLURM_FLAGS -N 1 -n 1 ./build/mpi -s 11212121 -n 10000 -o stest5.out
+
+check_correctness stest1.out mpi_base_verf1.out
+check_correctness stest2.out mpi_base_verf2.out
+check_correctness stest3.out mpi_base_verf3.out
+check_correctness stest4.out mpi_base_verf4.out
+check_correctness stest5.out mpi_base_verf5.out
+#python3 correctness-check.py stest2.out verf/mpi_base_verf2.out
+#if [ $? -ne 0 ]; then
+#    exit 1
+#fi
+#python3 correctness-check.py stest3.out verf/mpi_base_verf3.out
+#if [ $? -ne 0 ]; then
+#    exit 1
+#fi
+#python3 correctness-check.py stest4.out verf/mpi_base_verf4.out
+#if [ $? -ne 0 ]; then
+#    exit 1
+#fi
+#python3 correctness-check.py stest5.out verf/mpi_base_verf5.out
+#if [ $? -ne 0 ]; then
+#    exit 1
+#fi
+
+rm stest1.out stest2.out stest3.out stest4.out stest5.out 
+echo "--- END SERIAL-CORRECTNESS ---"
+echo ""
+
+
+# Parallel Correctness
+echo "--- PARALLEL-CORRECTNESS ---"
+srun $SLURM_FLAGS -N 2 -n 8  ./build/mpi -s 37151292 -n 10000 -o otest1.out
+srun $SLURM_FLAGS -N 2 -n 16 ./build/mpi -s 11111111 -n 10000 -o otest2.out
+srun $SLURM_FLAGS -N 2 -n 32 ./build/mpi -s 21211411 -n 10000 -o otest3.out
+srun $SLURM_FLAGS -N 2 -n 64 ./build/mpi -s 12222222 -n 10000 -o otest4.out
+
+check_correctness otest1.out mpi_scaling_verf1.out
+check_correctness otest2.out mpi_scaling_verf2.out
+check_correctness otest3.out mpi_scaling_verf3.out
+check_correctness otest4.out mpi_scaling_verf4.out
+#python3 correctness-check.py otest1.out verf/mpi_scaling_verf1.out
+#if [ $? -ne 0 ]; then
+#    exit 1
+#fi
+#python3 correctness-check.py otest2.out verf/mpi_scaling_verf2.out
+#if [ $? -ne 0 ]; then
+#    exit 1
+#fi
+#python3 correctness-check.py otest3.out verf/mpi_scaling_verf3.out
+#if [ $? -ne 0 ]; then
+#    exit 1
+#fi
+#python3 correctness-check.py otest4.out verf/mpi_scaling_verf4.out
+#if [ $? -ne 0 ]; then
+#    exit 1
+#fi
+
+rm otest1.out otest2.out otest3.out otest4.out
+echo "--- END PARALLEL-CORRECTNESS ---"
 echo ""
 
 # Serial Runtime

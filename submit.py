@@ -12,6 +12,8 @@ SERVER_URL = "https://leaderboard-zm07.onrender.com/"
 HEADER = "===== CS5220 HW3 LEADERBOARD SUBMISSION ====="
 FOOTER = "===== END CS5220 HW3 LEADERBOARD SUBMISSION ====="
 
+ERR = "AssertionError"
+
 
 def main():
     if len(sys.argv) != 2:
@@ -26,6 +28,10 @@ def main():
             raw_output = f.read()
     except FileNotFoundError:
         print(f"Error: File '{output_file}' not found.")
+        sys.exit(1)
+
+    if ERR in raw_output:
+        print("Output file contains an AssertionError, meaning your implementation fails one of the correctness checks.")
         sys.exit(1)
 
     if HEADER not in raw_output:
