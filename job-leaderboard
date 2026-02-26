@@ -1,0 +1,70 @@
+#!/bin/bash
+#SBATCH -N 2
+#SBATCH -C cpu
+#SBATCH -q debug
+#SBATCH -J cs5220-leaderboard
+#SBATCH --ntasks-per-node=128
+#SBATCH -t 00:30:00
+#SBATCH -o leaderboard-submission.out
+
+# --- Anonymous name generation ---
+NAMEFILE="./.cs5220-leaderboard-name"
+
+generate_name() {
+    local colors=(
+        red orange yellow green blue purple pink
+        crimson scarlet gold silver bronze teal
+        coral ivory amber jade violet indigo
+        magenta cyan maroon navy olive salmon
+    )
+    local animals=(
+        falcon eagle hawk owl raven sparrow
+        wolf tiger lion bear panther fox
+        dolphin whale shark otter seal penguin
+        cobra viper dragon phoenix griffin hydra
+        badger moose bison elk jaguar leopard
+    )
+    local c=${colors[$((RANDOM % ${#colors[@]}))]}
+    local a=${animals[$((RANDOM % ${#animals[@]}))]}
+    local n=$((RANDOM % 1000))
+    echo "${c}-${a}-${n}"
+}
+
+if [ -f "$NAMEFILE" ]; then
+    LEADERBOARD_NAME=$(cat "$NAMEFILE")
+else
+    LEADERBOARD_NAME=$(generate_name)
+    echo "$LEADERBOARD_NAME" > "$NAMEFILE"
+fi
+
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%S")
+
+# --- Output begins ---
+echo "===== CS5220 HW3 LEADERBOARD SUBMISSION ====="
+echo "LEADERBOARD_NAME: $LEADERBOARD_NAME"
+echo "TIMESTAMP: $TIMESTAMP"
+echo ""
+
+# Serial Runtime
+echo "--- SERIAL ---"
+srun $SLURM_FLAGS -N 1 --ntasks-per-node=1 ./build/mpi -s 37151292 -n 100000
+echo "--- END SERIAL ---"
+echo ""
+
+# 1e6 Scaling
+echo "--- SCALE_1M ---"
+srun $SLURM_FLAGS -N 1 --ntasks-per-node=64  ./build/mpi -s 37151292 -n 1000000
+srun $SLURM_FLAGS -N 2 --ntasks-per-node=64  ./build/mpi -s 37151292 -n 1000000
+srun $SLURM_FLAGS -N 2 --ntasks-per-node=128 ./build/mpi -s 37151292 -n 1000000
+echo "--- END SCALE_1M ---"
+echo ""
+
+# 2e6 Scaling
+echo "--- SCALE_2M ---"
+srun $SLURM_FLAGS -N 1 --ntasks-per-node=64  ./build/mpi -s 37151292 -n 2000000
+srun $SLURM_FLAGS -N 2 --ntasks-per-node=64  ./build/mpi -s 37151292 -n 2000000
+srun $SLURM_FLAGS -N 2 --ntasks-per-node=128 ./build/mpi -s 37151292 -n 2000000
+echo "--- END SCALE_2M ---"
+echo ""
+
+echo "===== END CS5220 HW3 LEADERBOARD SUBMISSION ====="
