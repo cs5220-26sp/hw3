@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(hw4)
+project(hw3)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
@@ -7,12 +7,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 find_package(MPI REQUIRED)
 
 # netID
-set(NET_ID xxx CACHE STRING "Your netID")
+set(GROUP_NO 0 CACHE STRING "Your group number")
 
 # Packaging system
-if (NOT ${NET_ID} STREQUAL xxx)
+if (NOT ${GROUP_NO} STREQUAL xxx)
     set(CPACK_GENERATOR TGZ)
-    set(CPACK_PACKAGE_FILE_NAME "CS5220${NET_ID}_hw4")
+    set(CPACK_PACKAGE_FILE_NAME "CS5220Group${GROUP_NO}_hw3")
     install(FILES mpi.cpp DESTINATION .)
     install(FILES ${CPACK_PACKAGE_FILE_NAME}.pdf DESTINATION .)
     include(CPack)
